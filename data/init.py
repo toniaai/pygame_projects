@@ -2,6 +2,9 @@ import pygame
 from resources import *
 import geometry
 
+def game_loop():
+    screen.blit(ball1, ball1_rect)
+
 if __name__ == "__main__":
     pygame.init()
 
@@ -14,16 +17,16 @@ if __name__ == "__main__":
 
     while run:
         pygame_events = pygame.event.get()
+
         for pygame_event in pygame_events:
 
             if QUIT == pygame_event.type or (KEYDOWN == pygame_event.type and
-                                            pygame_event.key in [K_ESCAPE, K_q]):
+             pygame_event.key in [K_ESCAPE, K_q]):
+            
                 run = 0
 
-        screen.blit(ball1, ball1_rect)
+        game_loop()
 
-        
         pygame.display.flip()
-        
-        # GAME FPS, ALWAYS LAST
         pygame_time_clock.tick(40)
+
