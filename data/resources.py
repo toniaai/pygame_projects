@@ -1,4 +1,7 @@
+from pygame.locals import *
+
 BASE_HEIGHT = 1080
 BASE_WIDTH = 1920
 SCREEN_SIZE = (BASE_WIDTH, BASE_HEIGHT)
-TITLE_CAPTION = 'Test Caption!'
+TITLE_CAPTION = 'Test Caption'
+DISPLAY_FLAGS = DOUBLEBUF
