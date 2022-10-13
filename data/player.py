@@ -1,5 +1,5 @@
 import pygame
-from resources import *
+from data.resources import *
 
 class Player():
     def __init__(self):

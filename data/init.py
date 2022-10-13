@@ -1,5 +1,5 @@
 import pygame
-from resources import *
+from data.resources import *
 import geometry
 
 def game_loop():
