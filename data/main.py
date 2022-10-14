@@ -51,7 +51,7 @@ def go_right(point_u_xy, point_u_yx, point_d_xy, point_d_yx):
     return point_u_xy, point_u_yx, point_d_xy, point_d_yx
 
 def draw_rectangle(screen, point_u_xy, point_u_yx, point_d_xy, point_d_yx):
-    print('')
+    pygame.draw.line(screen, COLOR_WHITE, False, ((point_u_xy[0], point_u_xy[1]), (point_u_yx[0], point_u_yx[1])))
 
 def draw_points(screen, point_u_xy, point_u_yx, point_d_xy, point_d_yx):
     screen.fill((COLOR_BLACK))
@@ -97,6 +97,8 @@ def main():
                 point_u_xy, point_u_yx, point_d_xy, point_d_yx = go_right(point_u_xy, point_u_yx, point_d_xy, point_d_yx)
 
             screen, point_u_xy, point_u_yx, point_d_xy, point_d_yx = draw_points(screen, point_u_xy, point_u_yx, point_d_xy, point_d_yx)
+
+            screen, point_u_xy, point_u_yx, point_d_xy, point_d_yx = draw_rectangle(screen, point_u_xy, point_u_yx, point_d_xy, point_d_yx)
 
         pygame.display.flip()
         clock.tick(60)
