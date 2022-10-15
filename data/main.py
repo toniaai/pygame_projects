@@ -74,7 +74,7 @@ def draw_player_vision(screen, player):
     pygame.draw.line(screen, COLOR_WHITE, (player[0], player[1]), (new_point_f_x_l, new_point_f_y_l), width= 1)
     pygame.draw.line(screen, COLOR_WHITE, (player[0], player[1]), (new_point_f_x_r, new_point_f_y_r), width= 1)
 
-def move_player(screen, player, mode):
+def move_player(player, mode):
     new_point_f_x = cos(player[2]) * (player[0] - player[0]) - sin(player[2]) * ( player[1] + (FORWARD_DISTANCE * mode) - player[1]) + player[0]
     new_point_f_y = sin(player[2]) * (player[0] - player[0]) + cos(player[2]) * ( player[1] + (FORWARD_DISTANCE * mode) - player[1]) + player[1] 
 
@@ -102,16 +102,16 @@ def main():
             keys = pygame.key.get_pressed()
 
             if keys[K_a]:
-                player = [player[0], player[1], player[2] + 0.1]
-            
-            if keys[K_d]:
                 player = [player[0], player[1], player[2] - 0.1]
             
+            if keys[K_d]:
+                player = [player[0], player[1], player[2] + 0.1]
+            
             if keys[K_w]:
-                player = move_player(screen, player, 1)
+                player = move_player(player, 1)
             
             if keys[K_s]:
-                player = move_player(screen, player, -1)
+                player = move_player(player, -1)
 
 
         draw_player(screen, player)
