@@ -1,6 +1,7 @@
 from asyncio import base_subprocess
 import pygame
 from pygame.locals import *
+from math import sqrt
 
 DISPLAY_FLAGS = DOUBLEBUF
 SCREEN_WIDTH = 640
@@ -14,64 +15,56 @@ BASE_S = 1
 BASE_A = 1
 BASE_D = 1
 
-MULT_w_W = MULT_GLOBAL * BASE_W
-MULT_w_H = MULT_GLOBAL * BASE_W
-def go_forward(point_u_xy, point_u_yx, point_d_xy, point_d_yx):
-    point_u_xy = [point_u_xy[0] + (-SCREEN_HEIGHT * MULT_w_H), point_u_xy[1] + (-SCREEN_WIDTH * MULT_w_W)]
-    point_u_yx = [point_u_yx[0] + (SCREEN_HEIGHT * MULT_w_H), point_u_yx[1] + (-SCREEN_WIDTH * MULT_w_W)]
-    point_d_xy = [point_d_xy[0] + (-SCREEN_HEIGHT * MULT_w_H), point_d_xy[1] + (SCREEN_WIDTH * MULT_w_W)]
-    point_d_yx = [point_d_yx[0] + (SCREEN_HEIGHT * MULT_w_H), point_d_yx[1] + (SCREEN_WIDTH * MULT_w_W)]
-    return point_u_xy, point_u_yx, point_d_xy, point_d_yx
+WALLS = [((2, 0), (2, 1)), ((3, 0), (3, 1))]
+POINTS = [(2,0), (2,1), (3,0), (3,1)]
 
-MULT_s_W = MULT_GLOBAL * BASE_S
-MULT_s_H = MULT_GLOBAL * BASE_S
-def go_backward(point_u_xy, point_u_yx, point_d_xy, point_d_yx):
-    point_u_xy = [point_u_xy[0] + (SCREEN_HEIGHT * MULT_s_H), point_u_xy[1] + (SCREEN_WIDTH * MULT_s_W)]
-    point_u_yx = [point_u_yx[0] + (-SCREEN_HEIGHT * MULT_s_H), point_u_yx[1] + (SCREEN_WIDTH * MULT_s_W)]
-    point_d_xy = [point_d_xy[0] + (SCREEN_HEIGHT * MULT_s_H), point_d_xy[1] + (-SCREEN_WIDTH * MULT_s_W)]
-    point_d_yx = [point_d_yx[0] + (-SCREEN_HEIGHT * MULT_s_H), point_d_yx[1] + (-SCREEN_WIDTH * MULT_s_W)]
-    return point_u_xy, point_u_yx, point_d_xy, point_d_yx
+HORIZON = 240
+MAX_DISTANCE = 2
+GRID_SIZE = 5
+SCREEN_WIDHT_UNIT = SCREEN_WIDTH / GRID_SIZE
+SCREEN_HEIGHT_UNIT = SCREEN_HEIGHT / GRID_SIZE
 
-MULT_a_W = MULT_GLOBAL * BASE_A
-MULT_a_H = MULT_GLOBAL * BASE_A
-def go_left(point_u_xy, point_u_yx, point_d_xy, point_d_yx):
-    point_u_xy = [point_u_xy[0] + (SCREEN_HEIGHT * MULT_d_H), point_u_xy[1] + (-SCREEN_WIDTH * MULT_d_W)]
-    point_u_yx = [point_u_yx[0] + (SCREEN_HEIGHT * MULT_d_H), point_u_yx[1] + (SCREEN_WIDTH * MULT_d_W)]
-    point_d_xy = [point_d_xy[0] + (SCREEN_HEIGHT * MULT_d_H), point_d_xy[1] + (SCREEN_WIDTH * MULT_d_W)]
-    point_d_yx = [point_d_yx[0] + (SCREEN_HEIGHT * MULT_d_H), point_d_yx[1] + (-SCREEN_WIDTH * MULT_d_W)]
-    return point_u_xy, point_u_yx, point_d_xy, point_d_yx
+def convert_coordinate_to_pixel(point):
+    point_x = point[0]
+    point_y = point[1]
 
-MULT_d_W = MULT_GLOBAL * BASE_D
-MULT_d_H = MULT_GLOBAL * BASE_D
-def go_right(point_u_xy, point_u_yx, point_d_xy, point_d_yx):
-    point_u_xy = [point_u_xy[0] + (-SCREEN_HEIGHT * MULT_d_H), point_u_xy[1] + (SCREEN_WIDTH * MULT_d_W)]
-    point_u_yx = [point_u_yx[0] + (-SCREEN_HEIGHT * MULT_d_H), point_u_yx[1] + (-SCREEN_WIDTH * MULT_d_W)]
-    point_d_xy = [point_d_xy[0] + (-SCREEN_HEIGHT * MULT_d_H), point_d_xy[1] + (-SCREEN_WIDTH * MULT_d_W)]
-    point_d_yx = [point_d_yx[0] + (-SCREEN_HEIGHT * MULT_d_H), point_d_yx[1] + (SCREEN_WIDTH * MULT_d_W)]
-    return point_u_xy, point_u_yx, point_d_xy, point_d_yx
+    #   
+    #               
+    #  (0, 0)____________ x 640
+    #       |           .
+    #       |           .
+    #       |   .   .   .
+    #        y           (639, 479)
+    #       480
+    # 
 
-def draw_rectangle(screen, point_u_xy, point_u_yx, point_d_xy, point_d_yx):
-    pygame.draw.line(screen, COLOR_WHITE, False, ((point_u_xy[0], point_u_xy[1]), (point_u_yx[0], point_u_yx[1])))
+    return (SCREEN_WIDTH/GRID_SIZE * point_x, SCREEN_HEIGHT/GRID_SIZE * point_y)
 
-def draw_points(screen, point_u_xy, point_u_yx, point_d_xy, point_d_yx):
-    screen.fill((COLOR_BLACK))
-    pygame.draw.circle(screen, COLOR_WHITE, (point_u_xy[0], point_u_xy[1]), THICKNESS_PUNTO)
-    pygame.draw.circle(screen, COLOR_WHITE, (point_u_yx[0], point_u_yx[1]), THICKNESS_PUNTO)
-    pygame.draw.circle(screen, COLOR_WHITE, (point_d_xy[0], point_d_xy[1]), THICKNESS_PUNTO)
-    pygame.draw.circle(screen, COLOR_WHITE, (point_d_yx[0], point_d_yx[1]), THICKNESS_PUNTO)
-    pygame.display.update()
+def euclidean_distance(q, p):
+    return sqrt((q[0] - p[0])**2 + (q[1] - p[1])**2)
 
-    return screen, point_u_xy, point_u_yx, point_d_xy, point_d_yx
+def is_point_in_distance(q, p, distance):
+    return (euclidean_distance(q , p) <= distance)
+
+def is_top_horizon(q):
+    return q[1] > HORIZON
+
+def return_points_in_distance(player, distance, points):
+    points_in_distance = []
+    for point in points:
+        if is_point_in_distance(player, point, distance):
+            return_points_in_distance.append(point)
+
+def draw_walls(player, walls):
+
+    # check which points are in distance
 
 def main():
     pygame.init()
     if pygame.display.mode_ok((SCREEN_WIDTH, SCREEN_HEIGHT), DISPLAY_FLAGS):
         screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), DISPLAY_FLAGS)
 
-    point_u_xy = [160, 120]
-    point_u_yx = [480, 120]
-    point_d_xy = [160, 360]
-    point_d_yx = [480, 360]
+    player = [320, 20]
 
     run = 1
     clock = pygame.time.Clock()
@@ -81,25 +74,14 @@ def main():
 
         for event in events:
             if event.type == QUIT or (event.type == KEYDOWN and
+
                                       event.key in [K_ESCAPE, K_q]):
                 run = 0
 
-            if event.type == KEYDOWN and event.key in [K_w]:
-                point_u_xy, point_u_yx, point_d_xy, point_d_yx = go_forward(point_u_xy, point_u_yx, point_d_xy, point_d_yx)
-            
-            if event.type == KEYDOWN and event.key in [K_s]:
-                point_u_xy, point_u_yx, point_d_xy, point_d_yx = go_backward(point_u_xy, point_u_yx, point_d_xy, point_d_yx)
 
-            if event.type == KEYDOWN and event.key in [K_a]:
-                point_u_xy, point_u_yx, point_d_xy, point_d_yx = go_left(point_u_xy, point_u_yx, point_d_xy, point_d_yx)
-            
-            if event.type == KEYDOWN and event.key in [K_d]:
-                point_u_xy, point_u_yx, point_d_xy, point_d_yx = go_right(point_u_xy, point_u_yx, point_d_xy, point_d_yx)
-
-            screen, point_u_xy, point_u_yx, point_d_xy, point_d_yx = draw_points(screen, point_u_xy, point_u_yx, point_d_xy, point_d_yx)
-
-            screen, point_u_xy, point_u_yx, point_d_xy, point_d_yx = draw_rectangle(screen, point_u_xy, point_u_yx, point_d_xy, point_d_yx)
 
         pygame.display.flip()
         clock.tick(60)
-main()
+
+
+
