@@ -64,11 +64,12 @@ def return_points_in_distance(player, distance, points):
         if is_point_in_distance(player, point, distance):
             return_points_in_distance.append(point)
 
+    return points_in_distance
+
 def sign(point_1, point_2, point_3):
     return (point_1[0] - point_3[0]) * (point_2[1] - point_3[1]) - (point_2[0] - point_3[0]) * (point_1[1] - point_3[1])
 
 def is_in_triangle(point, t_point_1, t_point_2, t_point_3):
-
     d_1 = sign(point, t_point_1, t_point_2)
     d_2 = sign(point, t_point_2, t_point_3)
     d_3 = sign(point, t_point_3, t_point_1)
@@ -102,6 +103,7 @@ def draw_player_vision(screen, player):
 
     pygame.draw.line(screen, COLOR_WHITE, (player[0], player[1]), (new_point_f_x_l, new_point_f_y_l), width= 1)
     pygame.draw.line(screen, COLOR_WHITE, (player[0], player[1]), (new_point_f_x_r, new_point_f_y_r), width= 1)
+
     return (new_point_f_x_l, new_point_f_y_l), (new_point_f_x_r, new_point_f_y_r)
 
 def move_player(player, mode):
@@ -117,17 +119,14 @@ def main():
 
     # player = [pos_x, pos_y, vision_angle]
     player = [320, 240, 0]
-
     run = 1
     clock = pygame.time.Clock()
 
     while run:
-        
         events = pygame.event.get()
 
         for event in events:
-            if event.type == QUIT or (event.type == KEYDOWN and
-                                      event.key in [K_ESCAPE, K_q]):
+            if event.type == QUIT or (event.type == KEYDOWN and event.key in [K_ESCAPE, K_q]):
                 run = 0
             
             keys = pygame.key.get_pressed()
@@ -149,7 +148,6 @@ def main():
         draw_player(screen, player)
         _, _ = draw_player_vision(screen, player)
         draw_map_points(screen, POINTS, player)
-
         
         pygame.display.flip()
         clock.tick(60)
