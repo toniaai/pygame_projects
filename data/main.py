@@ -18,7 +18,7 @@ BASE_A = 1
 BASE_D = 1
 
 WALLS = [((2, 0), (2, 1)), ((3, 0), (3, 1))]
-POINTS = [(2,0), (2,1), (3,0), (3,1)]
+POINTS = [(2, 0), (2, 1), (3, 0), (3, 1), (1, 1), (1, 2), (3, 2)]
 
 HORIZON = 240
 MAX_DISTANCE = 2
@@ -64,25 +64,19 @@ def return_points_in_distance(player, distance, points):
         if is_point_in_distance(player, point, distance):
             return_points_in_distance.append(point)
 
-# next steps:
-# def draw_map_points(POINTS):
-#   reads the points array input and draws them on screen
-#   checks if they are in vision range and sorts them in two lists
-#   of points that go into draw_map_point
-#
-# def draw_map_point(point, vis):
-# this actually draws the points, with vis as if its visible or not
-def area(point_1, point_2, point_3):
-    return abs((point_1[0] * (point_2[1] - point_3[1]) + point_2[0] * (point_3[1] - point_1[1]) + point_3[0] * (point_1[1] - point_2[1]))/2)
-
+def sign(point_1, point_2, point_3):
+    return (point_1[0] - point_3[0]) * (point_2[1] - point_3[1]) - (point_2[0] - point_3[0]) * (point_1[1] - point_3[1])
 
 def is_in_triangle(point, t_point_1, t_point_2, t_point_3):
-    a = area(t_point_1, t_point_2, t_point_3)
-    a1 = area(point, t_point_2, t_point_3)
-    a2 = area(t_point_1, point, t_point_3)
-    a3 = area(t_point_1, t_point_2, point)
 
-    return (a == (a1 + a2 + a3))
+    d_1 = sign(point, t_point_1, t_point_2)
+    d_2 = sign(point, t_point_2, t_point_3)
+    d_3 = sign(point, t_point_3, t_point_1)
+    
+    is_negative = (d_1 < 0) or (d_2 < 0) or (d_3 < 0)
+    is_positive = (d_1 > 0) or (d_2 > 0) or (d_3 > 0)
+
+    return not (is_negative and is_positive)
 
 def draw_map_point(screen, point, player):
     point_l, point_r = draw_player_vision(screen, player)
@@ -92,11 +86,9 @@ def draw_map_point(screen, point, player):
     else:
         pygame.draw.circle(screen, COLOR_WHITE, convert_coordinate_to_pixel(point), THICKNESS_PUNTO)
 
-
 def draw_map_points(screen, points, player):
     for point in points:
         draw_map_point(screen, point, player)
-
 
 def draw_player(screen, player):
     pygame.draw.circle(screen, COLOR_WHITE, (player[0], player[1]), THICKNESS_PUNTO)
@@ -153,9 +145,10 @@ def main():
                 player = move_player(player, -1)
 
         screen.fill(0) 
-        draw_map_points(screen, POINTS, player)
+        
         draw_player(screen, player)
         _, _ = draw_player_vision(screen, player)
+        draw_map_points(screen, POINTS, player)
 
         
         pygame.display.flip()
