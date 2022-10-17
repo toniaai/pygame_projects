@@ -1,6 +1,7 @@
+
 import pygame
 from pygame.locals import *
-from math import sqrt, cos, sin
+from math import sqrt, cos, sin, tan
 
 
 
@@ -11,6 +12,7 @@ THICKNESS_PUNTO = 3
 COLOR_BLACK = (0, 0, 0)
 COLOR_WHITE = (255, 255, 255)
 COLOR_RED = (255, 0, 0)
+COLOR_GREEN = (0, 255, 0)
 MULT_GLOBAL = 0.01
 BASE_W = 1
 BASE_S = 1
@@ -28,10 +30,10 @@ SCREEN_WIDHT_UNIT = SCREEN_WIDTH / GRID_SIZE
 SCREEN_HEIGHT_UNIT = SCREEN_HEIGHT / GRID_SIZE
 
 # FURTHERS VISION CONE
-VISION_Y = 200
+VISION_Y = 4000
 FORWARD_DISTANCE = 10
-LEFT_EYE_ANGLE = 0.5
-RIGHT_EYE_ANGLE = 0.5
+LEFT_EYE_ANGLE = 1
+RIGHT_EYE_ANGLE = 1
 
 def convert_coordinate_to_pixel(point):
     point_x = point[0]
@@ -82,14 +84,24 @@ def is_in_triangle(point, t_point_1, t_point_2, t_point_3):
 def draw_map_point(screen, point, player):
     point_l, point_r = draw_player_vision(screen, player)
 
-    if is_in_triangle(convert_coordinate_to_pixel(point), (player[0], player[1]), point_l, point_r):
-        pygame.draw.circle(screen, COLOR_RED, convert_coordinate_to_pixel(point), THICKNESS_PUNTO)
+    if is_in_triangle(point, (player[0], player[1]), point_l, point_r):
+        pygame.draw.circle(screen, COLOR_RED, point, THICKNESS_PUNTO)
+        return True, point
     else:
-        pygame.draw.circle(screen, COLOR_WHITE, convert_coordinate_to_pixel(point), THICKNESS_PUNTO)
+        pygame.draw.circle(screen, COLOR_WHITE, point, THICKNESS_PUNTO)
+        return False, point
+
 
 def draw_map_points(screen, points, player):
+    points_to_draw = []
+
     for point in points:
-        draw_map_point(screen, point, player)
+        in_vision_range, new_point = draw_map_point(screen, convert_coordinate_to_pixel(point), player)
+
+        if in_vision_range:
+            points_to_draw.append(new_point)
+    
+    return points_to_draw
 
 def draw_player(screen, player):
     pygame.draw.circle(screen, COLOR_WHITE, (player[0], player[1]), THICKNESS_PUNTO)
@@ -112,13 +124,50 @@ def move_player(player, mode):
 
     return [new_point_f_x, new_point_f_y, player[2]]
 
+def draw_map_point_3d(screen, player, point):
+    print(f'p: {player}, \nw: {point}, \neuclidean: {euclidean_distance(player,point)}\n')
+    h_w = SCREEN_WIDTH*0.5
+    h_h = SCREEN_HEIGHT*0.5
+
+    focal_length = ((h_w / (tan(1) * 0.5)) + (h_h / (tan(1) * 0.5)) * 0.5)
+    
+    
+    new_x = ((point[0]) * focal_length) / (euclidean_distance(player, point) + focal_length)
+    new_y = ((point[1]) * focal_length) / (euclidean_distance(player, point) + focal_length)
+
+
+
+    new_top_x = new_x
+    
+    if (new_y >= HORIZON):
+        new_top_y = new_y
+    else:
+        new_top_y = (HORIZON - new_y)
+
+    pygame.draw.circle(screen, COLOR_GREEN, (new_x, new_y), THICKNESS_PUNTO)
+    #pygame.draw.circle(screen, COLOR_GREEN, (new_top_x, new_top_y), THICKNESS_PUNTO)
+
+def draw_map_points_3d(screen, player, points):
+    for point in points:
+        draw_map_point_3d(screen, player, point)
+
+def draw_player_pov(screen, player, points):
+    print('a')
+
+
+def draw_2d(screen, player, POINTS):
+    draw_player(screen, player)
+    _, _ = draw_player_vision(screen, player)
+    points_to_draw = draw_map_points(screen, POINTS, player)
+    draw_map_points_3d(screen, player, points_to_draw)
+
 def main():
     pygame.init()
     if pygame.display.mode_ok((SCREEN_WIDTH, SCREEN_HEIGHT), DISPLAY_FLAGS):
         screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), DISPLAY_FLAGS)
 
     # player = [pos_x, pos_y, vision_angle]
-    player = [320, 240, 0]
+    player = [320, 240, 3.1]
     run = 1
     clock = pygame.time.Clock()
 
@@ -145,10 +194,8 @@ def main():
 
         screen.fill(0) 
         
-        draw_player(screen, player)
-        _, _ = draw_player_vision(screen, player)
-        draw_map_points(screen, POINTS, player)
-        
+        draw_2d(screen, player, POINTS)
+
         pygame.display.flip()
         clock.tick(60)
 
