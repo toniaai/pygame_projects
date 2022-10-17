@@ -1,7 +1,8 @@
 
 import pygame
 from pygame.locals import *
-from math import sqrt, cos, sin, tan
+from math import sqrt, cos, sin
+import numpy as np
 
 
 
@@ -20,7 +21,7 @@ BASE_A = 1
 BASE_D = 1
 
 WALLS = [((2, 0), (2, 1)), ((3, 0), (3, 1))]
-POINTS = [(2, 0), (2, 1), (3, 0), (3, 1), (1, 1), (1, 2), (3, 2)]
+POINTS = [(1, 0), (1, 0.5), (1.5, 0), (1.5, 0.5), (0.5, 0.5), (0.5, 1), (1.5, 1)]
 
 HORIZON = 240
 MAX_DISTANCE = 2
@@ -50,6 +51,7 @@ def convert_coordinate_to_pixel(point):
     # 
 
     return (SCREEN_WIDTH/GRID_SIZE * point_x, SCREEN_HEIGHT/GRID_SIZE * point_y)
+
 
 def euclidean_distance(q, p):
     return sqrt((q[0] - p[0])**2 + (q[1] - p[1])**2)
@@ -124,36 +126,29 @@ def move_player(player, mode):
 
     return [new_point_f_x, new_point_f_y, player[2]]
 
+def to_linalg(point):
+    return [point[0], point[1]]
+
 def draw_map_point_3d(screen, player, point):
     print(f'p: {player}, \nw: {point}, \neuclidean: {euclidean_distance(player,point)}\n')
-    h_w = SCREEN_WIDTH*0.5
-    h_h = SCREEN_HEIGHT*0.5
+    player_normal = np.array((player[0], player[1]))
+    player_this_is_cheating = np.array((point[0], player[1]))
 
-    focal_length = ((h_w / (tan(1) * 0.5)) + (h_h / (tan(1) * 0.5)) * 0.5)
-    
-    
-    new_x = ((point[0]) * focal_length) / (euclidean_distance(player, point) + focal_length)
-    new_y = ((point[1]) * focal_length) / (euclidean_distance(player, point) + focal_length)
-
+    new_x = ((point[0] - player[0]) * (50/np.linalg.norm(player_normal - np.array(point))) + SCREEN_WIDTH/2)
+    old_y = ((point[1] - player[1]) * (50/np.linalg.norm(player_normal - np.array(point))) + SCREEN_HEIGHT/2)
+    new_y = np.linalg.norm(player_this_is_cheating - np.array(point)) + HORIZON
 
 
     new_top_x = new_x
-    
-    if (new_y >= HORIZON):
-        new_top_y = new_y
-    else:
-        new_top_y = (HORIZON - new_y)
+    new_top_y = (player[1] - np.linalg.norm(player_this_is_cheating - np.array(point))) + HORIZON
 
-    pygame.draw.circle(screen, COLOR_GREEN, (new_x, new_y), THICKNESS_PUNTO)
-    #pygame.draw.circle(screen, COLOR_GREEN, (new_top_x, new_top_y), THICKNESS_PUNTO)
+    pygame.draw.circle(screen, COLOR_RED, (new_x, old_y), THICKNESS_PUNTO)
+    pygame.draw.circle(screen, COLOR_GREEN, (new_top_x, new_top_y), THICKNESS_PUNTO)
+    pygame.draw.circle(screen, COLOR_GREEN, (new_top_x, abs(new_top_y - SCREEN_HEIGHT)+ 10), THICKNESS_PUNTO)
 
 def draw_map_points_3d(screen, player, points):
     for point in points:
         draw_map_point_3d(screen, player, point)
-
-def draw_player_pov(screen, player, points):
-    print('a')
-
 
 def draw_2d(screen, player, POINTS):
     draw_player(screen, player)
