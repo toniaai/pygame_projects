@@ -21,7 +21,7 @@ BASE_A = 1
 BASE_D = 1
 
 WALLS = [((2, 0), (2, 1)), ((3, 0), (3, 1))]
-POINTS = [(1, 0), (1, 0.5), (1.5, 0), (1.5, 0.5), (0.5, 0.5), (0.5, 1), (1.5, 1)]
+POINTS = [(2,0),(2,1),(1,0),(1,1),(3,1)]
 
 HORIZON = 240
 MAX_DISTANCE = 2
@@ -33,8 +33,8 @@ SCREEN_HEIGHT_UNIT = SCREEN_HEIGHT / GRID_SIZE
 # FURTHERS VISION CONE
 VISION_Y = 4000
 FORWARD_DISTANCE = 10
-LEFT_EYE_ANGLE = 1
-RIGHT_EYE_ANGLE = 1
+LEFT_EYE_ANGLE = 0.5
+RIGHT_EYE_ANGLE = 0.5
 
 def convert_coordinate_to_pixel(point):
     point_x = point[0]
@@ -134,17 +134,18 @@ def draw_map_point_3d(screen, player, point):
     player_normal = np.array((player[0], player[1]))
     player_this_is_cheating = np.array((point[0], player[1]))
 
-    new_x = ((point[0] - player[0]) * (50/np.linalg.norm(player_normal - np.array(point))) + SCREEN_WIDTH/2)
-    old_y = ((point[1] - player[1]) * (50/np.linalg.norm(player_normal - np.array(point))) + SCREEN_HEIGHT/2)
-    new_y = np.linalg.norm(player_this_is_cheating - np.array(point)) + HORIZON
-
+    new_x = ((player[0] - point[0]) * (100/np.linalg.norm(player_normal - np.array(point))) + SCREEN_WIDTH/2)
+    old_y = ((point[1] - player[1]) * (100/np.linalg.norm(player_normal - np.array(point))) + SCREEN_HEIGHT/2)
 
     new_top_x = new_x
-    new_top_y = (player[1] - np.linalg.norm(player_this_is_cheating - np.array(point))) + HORIZON
+    new_top_y = np.linalg.norm(player_this_is_cheating - np.array(point))/4 + HORIZON
 
     pygame.draw.circle(screen, COLOR_RED, (new_x, old_y), THICKNESS_PUNTO)
     pygame.draw.circle(screen, COLOR_GREEN, (new_top_x, new_top_y), THICKNESS_PUNTO)
-    pygame.draw.circle(screen, COLOR_GREEN, (new_top_x, abs(new_top_y - SCREEN_HEIGHT)+ 10), THICKNESS_PUNTO)
+    print(f'green: ({new_top_x}, {new_top_y})')
+
+    pygame.draw.circle(screen, (0, 0, 255), (new_top_x, abs(new_top_y - HORIZON*2)), THICKNESS_PUNTO)
+    print(f'blue: ({new_top_x}, { abs(new_top_y - SCREEN_HEIGHT)})')
 
 def draw_map_points_3d(screen, player, points):
     for point in points:
